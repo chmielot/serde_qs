@@ -350,6 +350,14 @@ fn deserialize_enum_adjacently() {
 #[test]
 fn deserialize_enum() {
     #[derive(Deserialize, Debug, PartialEq)]
+    struct SubType {
+        i: u8,
+        o: u8,
+    }
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct NewType(Vec<SubType>);
+
+    #[derive(Deserialize, Debug, PartialEq)]
     struct NewU8(u8);
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -369,9 +377,10 @@ fn deserialize_enum() {
         e: E,
         v: Option<V>,
         u: NewU8,
+        n: NewType,
     }
 
-    let params = "e=B&v[V1][x]=12&v[V1][y]=300&u=12";
+    let params = "e=B&v[V1][x]=12&v[V1][y]=300&u=12&n[0][i]=1&n[0][o]=2&n[1][i]=3&n[1][o]=4";
     let rec_params: Query = qs::from_str(params).unwrap();
     assert_eq!(
         rec_params,
@@ -379,10 +388,11 @@ fn deserialize_enum() {
             e: E::B,
             v: Some(V::V1 { x: 12, y: 300 }),
             u: NewU8(12),
+            n: NewType(vec![SubType { i: 1, o: 2 }, SubType { i: 3, o: 4 }])
         }
     );
 
-    let params = "e[S]=other&u=1";
+    let params = "e[S]=other&u=1&n=";
     let rec_params: Query = qs::from_str(params).unwrap();
     assert_eq!(
         rec_params,
@@ -390,6 +400,7 @@ fn deserialize_enum() {
             e: E::S("other".to_string()),
             v: None,
             u: NewU8(1),
+            n: NewType(vec![])
         }
     );
 
